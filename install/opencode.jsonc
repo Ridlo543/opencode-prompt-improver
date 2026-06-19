@@ -1,0 +1,22 @@
+{
+  "//": "Merge these entries into your existing opencode.jsonc (global: ~/.config/opencode/opencode.jsonc or project: .opencode/opencode.jsonc)",
+
+  "agent": {
+    "prompt-improver": {
+      "description": "Internal agent for prompt improvement — used by the plugin via session.prompt()",
+      "hidden": true,
+      "temperature": 0.1,
+      "permission": {
+        "edit": "deny",
+        "bash": "deny",
+        "webfetch": "deny"
+      }
+    }
+  },
+  "command": {
+    "improve": {
+      "description": "Improve and structure the current prompt before sending",
+      "template": "{{input}}"
+    }
+  }
+}

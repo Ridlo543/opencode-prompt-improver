@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Advan/.config/opencode/**)",
+      "Bash(find \"D:\\\\Programming\\\\project\\\\opencode\" -type f -name \"*.ts\" -o -name \"*.go\" -o -name \"*.json\" | head -50)",
+      "Read(//d/Programming/project/opencode/**)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\Advan\\.config\\opencode"
+    ]
+  }
+}
