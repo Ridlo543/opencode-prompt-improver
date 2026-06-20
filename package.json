@@ -1,13 +1,13 @@
 {
   "name": "opencode-prompt-improver",
   "version": "1.0.0",
-  "description": "OpenCode plugin to automatically improve and structure prompts before sending to the AI",
+  "description": "OpenCode plugin that rewrites rough prompts into precise, context-rich briefs before sending to the AI agent",
   "type": "module",
   "main": "src/index.ts",
   "files": [
     "src/index.ts",
-    "prompts/improver.txt",
-    "install/"
+    "install/",
+    "setup.ts"
   ],
   "dependencies": {
     "@opencode-ai/plugin": "^1.16.0",
@@ -17,7 +17,7 @@
     "typescript": "^5.7.0",
     "bun-types": "latest"
   },
-"scripts": {
+  "scripts": {
     "setup": "bun run setup.ts",
     "typecheck": "tsc --noEmit",
     "test": "bun test"

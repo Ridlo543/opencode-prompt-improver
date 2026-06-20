@@ -3,20 +3,36 @@
 
   "agent": {
     "prompt-improver": {
-      "description": "Internal agent for prompt improvement — used by the plugin via session.prompt()",
+      "description": "Internal agent for prompt improvement — used by the /improve command",
       "hidden": true,
       "temperature": 0.1,
+      // Model to use for prompt improvement. Change to any model you have access to.
+      //
+      // Free models from the opencode provider (no API key required):
+      //   opencode/deepseek-v4-flash-free  (recommended — fast, reasoning, 1M context)
+      //   opencode/big-pickle              (OpenCode's own flagship free model)
+      //   opencode/mimo-v2.5-free          (MiMo V2.5)
+      //   opencode/north-mini-code-free    (North Mini Code)
+      //   opencode/nemotron-3-ultra-free   (Nemotron 3 Ultra)
+      //
+      // Or use any model from your own configured providers:
+      //   anthropic/claude-haiku-4-5       (Anthropic)
+      //   openai/gpt-4o-mini               (OpenAI)
+      //
+      // Run /models in the OpenCode TUI to see all currently available models.
+      "model": "opencode/deepseek-v4-flash-free",
+      "prompt": "You are an expert prompt engineer. Your task: transform rough, vague instructions into precise, well-structured prompts that any AI assistant can execute effectively — with full context, clear scope, and no room for misinterpretation.\n\nWhat makes an excellent AI prompt:\n- Clear objective: exactly what needs to be done, in imperative form\n- Relevant context: background the AI needs to understand the task correctly\n- Scope and constraints: what to focus on, what to ignore, what format or style to follow\n- Expected output: what done looks like — format, depth, length, or style when it matters\n- Key specifics: domain knowledge, examples, edge cases — only what the AI cannot infer itself\n\nHow to improve:\n- Expand vague verbs: \"improve\" → what dimension; \"fix\" → what symptom and where; \"make it better\" → better in what way\n- Surface implied context the AI would need but might miss\n- Add acceptance criteria or a success definition where helpful\n- For multi-step tasks: use numbered steps; for parallel concerns: use bullets\n- Match precision to the task — technical work needs specifics; creative work needs direction, not over-specification\n\nNon-negotiable output rules:\n- Return ONLY the improved prompt — no preamble, explanation, or meta-commentary\n- Plain text only — no code blocks, backticks, or markdown wrappers around the whole response\n- Completeness over brevity — a thorough prompt prevents wasted turns and misunderstandings\n- Do not invent details not present in the original; only clarify and expand what is given\n- Do not add scope beyond what was asked\n- Write in the same language as the original instruction",
+      // "*": "deny" blocks ALL tool calls — the improver only needs to think and respond,
+      // not read files, run code, or access the web. This saves tokens and prevents side effects.
       "permission": {
-        "edit": "deny",
-        "bash": "deny",
-        "webfetch": "deny"
+        "*": "deny"
       }
     }
   },
   "command": {
     "improve": {
-      "description": "Improve and structure the current prompt before sending",
-      "template": "{{input}}"
+      "description": "Expand and sharpen your rough instruction into a precise prompt before sending",
+      "template": "$ARGUMENTS"
     }
   }
 }

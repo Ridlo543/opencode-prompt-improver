@@ -1,7 +1,6 @@
 import { describe, it, expect, mock } from "bun:test"
 import type { PluginInput, Hooks } from "@opencode-ai/plugin"
 
-// Simulate client with tui and session APIs
 function createMockPluginInput(overrides: Partial<{
   sessionCreateFail: boolean
   promptFail: boolean
@@ -38,6 +37,10 @@ function createMockPluginInput(overrides: Partial<{
         sessionCalls.push({ method: "delete", args })
         return {}
       }),
+      abort: mock(async (args: any) => {
+        sessionCalls.push({ method: "abort", args })
+        return {}
+      }),
     },
   } as any
 
@@ -59,11 +62,11 @@ describe("PromptImprover plugin", () => {
     expect(tuiCalls).toHaveLength(0)
   })
 
-  it("shows warning for empty prompt", async () => {
+  it("shows warning and sets noMessage for empty prompt", async () => {
     const { client, tuiCalls } = createMockPluginInput()
     const hooks = await (await import("../src/index")).default({ client } as PluginInput) as Hooks
 
-    const output: any = { parts: [{ type: "text", text: "" }] }
+    const output: any = { parts: [], noMessage: false }
     await hooks["command.execute.before"]!(
       { command: "improve", sessionID: "s1", arguments: "" },
       output,
@@ -71,31 +74,32 @@ describe("PromptImprover plugin", () => {
 
     expect(tuiCalls[0]!.method).toBe("showToast")
     expect(tuiCalls[0]!.args.body.variant).toBe("warning")
-    expect(output.parts[0]!.text).toContain("No prompt")
+    expect(output.noMessage).toBe(true)
   })
 
-  it("improves prompt and injects into chat input", async () => {
-    const { client, tuiCalls } = createMockPluginInput({
+  it("improves prompt, populates chat input, and sets noMessage to skip session message", async () => {
+    const { client, tuiCalls, sessionCalls } = createMockPluginInput({
       promptTextResponse: "## Refactored\n\n1. Do X\n2. Do Y",
     })
     const hooks = await (await import("../src/index")).default({ client } as PluginInput) as Hooks
 
-    const output: any = { parts: [{ type: "text", text: "should be cleared" }] }
+    const output: any = { parts: [{ type: "text", text: "raw rough prompt" }], noMessage: false }
     await hooks["command.execute.before"]!(
       { command: "improve", sessionID: "s1", arguments: "fix the bug" },
       output,
     )
 
-    // Should suppress the original command
-    expect(output.parts).toEqual([])
+    // noMessage=true — no session message created, no agent runs, session stays clean
+    expect(output.noMessage).toBe(true)
 
-    // Should clear then append prompt
-    expect(tuiCalls.find(c => c.method === "clearPrompt")).toBeTruthy()
+    // Chat input updated with improved text for review
     const appendCall = tuiCalls.find(c => c.method === "appendPrompt")
     expect(appendCall!.args.body.text).toBe("## Refactored\n\n1. Do X\n2. Do Y")
 
-    // Success toast
+    // Success toast shown
     expect(tuiCalls.find(c => c.method === "showToast" && c.args.body.variant === "success")).toBeTruthy()
+
+    expect(sessionCalls.find(c => c.method === "abort")).toBeUndefined()
   })
 
   it("extracts text directly from response parts", async () => {
@@ -114,11 +118,11 @@ describe("PromptImprover plugin", () => {
     expect(appendCall!.args.body.text).toBe("Refactored prompt text")
   })
 
-  it("shows error toast on failure", async () => {
-    const { client, tuiCalls } = createMockPluginInput({ promptFail: true })
+  it("shows error toast on failure and sets noMessage to keep session clean", async () => {
+    const { client, tuiCalls, sessionCalls } = createMockPluginInput({ promptFail: true })
     const hooks = await (await import("../src/index")).default({ client } as PluginInput) as Hooks
 
-    const output: any = { parts: [] as any[] }
+    const output: any = { parts: [] as any[], noMessage: false }
     await hooks["command.execute.before"]!(
       { command: "improve", sessionID: "s1", arguments: "test" },
       output,
@@ -126,13 +130,13 @@ describe("PromptImprover plugin", () => {
 
     const errorToast = tuiCalls.find(c => c.method === "showToast" && c.args.body.variant === "error")
     expect(errorToast).toBeTruthy()
-    expect(output.parts[0]!.text).toContain("failed")
+    // noMessage still true on error — session stays clean, toast is enough feedback
+    expect(output.noMessage).toBe(true)
+    expect(sessionCalls.find(c => c.method === "abort")).toBeUndefined()
   })
 
   it("cleans up temp session after completion", async () => {
-    const { client, sessionCalls } = createMockPluginInput({
-      promptTextResponse: "done",
-    })
+    const { client, sessionCalls } = createMockPluginInput({ promptTextResponse: "done" })
     const hooks = await (await import("../src/index")).default({ client } as PluginInput) as Hooks
 
     await hooks["command.execute.before"]!(
@@ -146,10 +150,7 @@ describe("PromptImprover plugin", () => {
   })
 
   it("cleans up temp session even on error", async () => {
-    const { client, sessionCalls } = createMockPluginInput({
-      sessionCreateFail: false,
-      promptFail: true,
-    })
+    const { client, sessionCalls } = createMockPluginInput({ promptFail: true })
     const hooks = await (await import("../src/index")).default({ client } as PluginInput) as Hooks
 
     await hooks["command.execute.before"]!(
@@ -162,9 +163,7 @@ describe("PromptImprover plugin", () => {
   })
 
   it("uses prompt-improver agent for model + temperature config", async () => {
-    const { client, sessionCalls } = createMockPluginInput({
-      promptTextResponse: "ok",
-    })
+    const { client, sessionCalls } = createMockPluginInput({ promptTextResponse: "ok" })
     const hooks = await (await import("../src/index")).default({ client } as PluginInput) as Hooks
 
     await hooks["command.execute.before"]!(
