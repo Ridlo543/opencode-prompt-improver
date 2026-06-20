@@ -1,6 +1,6 @@
 import type { Plugin } from "@opencode-ai/plugin"
 
-export const PromptImprover: Plugin = async ({ client }) => {
+export const PromptImprover: Plugin = async ({ client, directory }) => {
   return {
     "command.execute.before": async (input, output) => {
       if (input.command !== "improve") return
@@ -19,8 +19,14 @@ export const PromptImprover: Plugin = async ({ client }) => {
 
       let subSessionID: string | undefined
       try {
-        const createResult = await client.session.create({ body: { title: "prompt-improve" } })
-        const session = (createResult as any).data
+        // parentID scopes the sub-session as a child of the main session so its
+        // lifecycle events don't pollute the workspace's shared provider state.
+        // query.directory pins it to the same workspace context as the main session.
+        const createResult = await client.session.create({
+          body: { title: "prompt-improve", parentID: input.sessionID },
+          query: { directory },
+        })
+        const session = createResult.data
         subSessionID = session?.id
         if (!subSessionID) throw new Error("Failed to create sub-session")
 
@@ -30,12 +36,13 @@ export const PromptImprover: Plugin = async ({ client }) => {
             agent: "prompt-improver",
             parts: [{ type: "text", text: rawPrompt }],
           },
-        } as any)
+          query: { directory },
+        })
 
-        const responseParts: any[] = (promptResult as any).data?.parts ?? []
+        const responseParts = promptResult.data?.parts ?? []
         const raw = responseParts
-          .filter((p: any) => p.type === "text")
-          .map((p: any) => p.text ?? "")
+          .filter((p) => p.type === "text")
+          .map((p) => (p as any).text ?? "")
           .join("")
           .trim()
         // Strip code-block wrapping if the LLM adds it despite instructions
@@ -56,7 +63,7 @@ export const PromptImprover: Plugin = async ({ client }) => {
         })
       } finally {
         if (subSessionID) {
-          try { await client.session.delete({ path: { id: subSessionID } }) } catch { /* ignore */ }
+          try { await client.session.delete({ path: { id: subSessionID }, query: { directory } }) } catch { /* ignore */ }
         }
       }
     },
