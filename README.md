@@ -40,7 +40,6 @@ Restart OpenCode. Done.
 | Plugin | Copies `src/index.ts` → `~/.config/opencode/plugins/prompt-improver.ts` |
 | Agent config | Merges `agent.prompt-improver` into `~/.config/opencode/opencode.jsonc` |
 | Command config | Merges `command.improve` into `~/.config/opencode/opencode.jsonc` |
-| Keybind | Merges `keybinds.prompt_improve` into `~/.config/opencode/tui.json` |
 
 ### Manual Installation
 
@@ -60,11 +59,7 @@ Merge the contents of [`install/opencode.jsonc`](install/opencode.jsonc) into yo
 - Global: `~/.config/opencode/opencode.jsonc`
 - Project-level: `.opencode/opencode.jsonc`
 
-**3. (Optional) Add the keybind**
-
-Merge the contents of [`install/tui.jsonc`](install/tui.jsonc) into `~/.config/opencode/tui.json` to use `Ctrl+Shift+I` as a shortcut.
-
-**4. Restart OpenCode.**
+**3. Restart OpenCode.**
 
 ## Usage
 
@@ -75,10 +70,6 @@ Merge the contents of [`install/tui.jsonc`](install/tui.jsonc) into `~/.config/o
 /improve analyze the codebase and identify problems
 /improve analisa kode di workspace ini dan identifikasi masalahnya
 ```
-
-### Keyboard Shortcut
-
-Press **Ctrl+Shift+I** to improve whatever is currently typed in the chat input (same as `/improve <current text>`).
 
 ## Token Efficiency
 
@@ -107,7 +98,7 @@ These work out of the box with no additional setup:
 | `opencode/north-mini-code-free` | North Mini Code |
 | `opencode/nemotron-3-ultra-free` | Nemotron 3 Ultra |
 
-Run `/models` in the OpenCode TUI to see the full current list of available free models.
+Run `opencode models opencode` in the terminal to see the full current list of available models.
 
 ### Using your own provider
 
@@ -123,7 +114,7 @@ You can use any model from a provider you have already configured:
 }
 ```
 
-Examples: `openai/gpt-4o-mini`, `anthropic/claude-haiku-4-5`, `google/gemini-flash-1.5`, or any model ID shown in `/models`.
+Examples: `openai/gpt-4o-mini`, `anthropic/claude-haiku-4-5`, `google/gemini-flash-1.5`, or any model ID shown in `opencode models`.
 
 ## Configuration Reference
 
@@ -166,8 +157,7 @@ bun run typecheck  # TypeScript check
 opencode-prompt-improver/
 ├── src/index.ts       ← plugin code (the only runtime file)
 ├── install/
-│   ├── opencode.jsonc ← config template (agent + command)
-│   └── tui.jsonc      ← keybind template
+│   └── opencode.jsonc ← config template (agent + command)
 ├── tests/             ← unit tests
 ├── setup.ts           ← installer script
 └── package.json

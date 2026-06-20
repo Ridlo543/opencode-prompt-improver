@@ -95,27 +95,6 @@ export function setup() {
   writeFileSync(configPath, JSON.stringify(config, null, "\t") + "\n")
   console.log("✓ Merged opencode.jsonc config")
 
-  // 4. Merge tui.json
-  const tuiPath = resolve(OPENDODE_CONFIG, "tui.json")
-  let tui: any = {}
-  if (existsSync(tuiPath)) {
-    const raw = readFileSync(tuiPath, "utf-8").trim()
-    if (raw) tui = JSON.parse(raw)
-  }
-
-  deepMerge(tui, {
-    keybinds: {
-      prompt_improve: {
-        bindings: ["C-S-i"],
-        command: "command.execute",
-        description: "Improve the current prompt in the chat input",
-      },
-    },
-  })
-
-  writeFileSync(tuiPath, JSON.stringify(tui, null, 2) + "\n")
-  console.log("✓ Merged tui.json keybinds")
-
   console.log("\nDone! Restart OpenCode to activate.")
 }
 
