@@ -15,7 +15,7 @@ export const PromptImprover: Plugin = async ({ client, directory }) => {
         return
       }
 
-      await client.tui.showToast({ body: { message: "Improving prompt…", variant: "info", duration: 15000 } })
+      await client.tui.showToast({ body: { message: "Improving prompt…", variant: "info", duration: 300000 } })
 
       let subSessionID: string | undefined
       try {

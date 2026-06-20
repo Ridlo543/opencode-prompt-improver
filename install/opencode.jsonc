@@ -32,7 +32,12 @@
   "command": {
     "improve": {
       "description": "Expand and sharpen your rough instruction into a precise prompt before sending",
-      "template": "$ARGUMENTS"
+      "template": "$ARGUMENTS",
+      // Pin the command to the opencode provider so the server never validates against
+      // the user's currently-selected model (e.g. a custom provider) before the hook runs.
+      // The actual LLM call is made in a hidden sub-session using the agent's own model;
+      // this value is only used for the pre-hook model-lookup at prompt.ts:1482.
+      "model": "opencode/deepseek-v4-flash-free"
     }
   }
 }

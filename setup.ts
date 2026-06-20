@@ -88,6 +88,7 @@ export function setup() {
       improve: {
         description: "Expand and sharpen your rough instruction into a precise prompt before sending",
         template: "$ARGUMENTS",
+        model: "opencode/deepseek-v4-flash-free",
       },
     },
   })
