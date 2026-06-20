@@ -142,12 +142,89 @@ The default system prompt instructs the LLM to expand vague instructions into pr
 }
 ```
 
+## Desktop App Support
+
+The `/improve` command works in OpenCode TUI out of the box after `bun run setup`.
+
+For the **desktop app** (Electron), the improved prompt injection requires a patched build of OpenCode because the official release does not yet include the `tui.prompt.append` event handler in the renderer. Without the patch, `/improve` runs but the result is not injected into the desktop input box.
+
+### Building the desktop app from the fork
+
+> **Prerequisites:** [Bun](https://bun.sh), [Node.js](https://nodejs.org), [Git](https://git-scm.com)
+
+```bash
+# 1. Clone the opencode fork
+git clone https://github.com/ridloal/opencode
+cd opencode
+
+# 2. Install dependencies
+bun install
+
+# 3. Build the opencode server bundle (required by the desktop main process)
+cd packages/opencode
+bun script/build-node.ts
+cd ../..
+
+# 4. Copy desktop assets
+cd packages/desktop
+bun ./scripts/copy-icons.ts dev
+bun ./scripts/copy-metainfo.ts dev
+
+# 5. Build the Electron app (main + preload + renderer)
+./node_modules/.bin/electron-vite build
+
+# 6. Pack into app.asar
+bun x @electron/asar pack out app.asar
+```
+
+### Replace the installed app.asar
+
+Close the OpenCode desktop app first, then:
+
+**macOS**
+```bash
+# Backup
+cp "/Applications/OpenCode.app/Contents/Resources/app.asar" \
+   "/Applications/OpenCode.app/Contents/Resources/app.asar.bak"
+
+# Replace
+cp packages/desktop/app.asar \
+   "/Applications/OpenCode.app/Contents/Resources/app.asar"
+```
+
+**Windows (PowerShell)**
+```powershell
+$resources = "$env:LOCALAPPDATA\Programs\@opencode-aidesktop\resources"
+
+# Backup
+Copy-Item "$resources\app.asar" "$resources\app.asar.bak" -Force
+
+# Replace
+Copy-Item "packages\desktop\app.asar" "$resources\app.asar" -Force
+```
+
+**Linux**
+```bash
+# Location varies by install method — find with:
+find / -name "app.asar" -path "*/opencode*" 2>/dev/null
+
+# Backup and replace
+cp /path/to/resources/app.asar /path/to/resources/app.asar.bak
+cp packages/desktop/app.asar /path/to/resources/app.asar
+```
+
+Reopen OpenCode desktop. The `/improve` command now injects the result directly into the chat input.
+
+> **Note:** Auto-updates will overwrite `app.asar`. Re-run steps 3–6 after each OpenCode update, or restore the original from `app.asar.bak`.
+
+---
+
 ## Development
 
 ```bash
-bun install      # install dependencies
-bun test         # run tests
-bun run setup    # install to local OpenCode
+bun install        # install dependencies
+bun test           # run tests
+bun run setup      # install plugin to local OpenCode
 bun run typecheck  # TypeScript check
 ```
 
